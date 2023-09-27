@@ -21,6 +21,7 @@ The driver class for the various integrators.
 #include "ensemble_bdp.cuh"
 #include "ensemble_ber.cuh"
 #include "ensemble_lan.cuh"
+#include "ensemble_msst_mttk.cuh"
 #include "ensemble_mttk.cuh"
 #include "ensemble_nhc.cuh"
 #include "ensemble_npt_scr.cuh"
@@ -37,7 +38,7 @@ void Integrate::initialize(
   Box& box,
   std::vector<Group>& group,
   GPU_Vector<double>& thermo,
-  int &total_steps)
+  int& total_steps)
 {
   this->total_steps = total_steps;
   int number_of_atoms = atom.number_of_atoms;
@@ -113,6 +114,9 @@ void Integrate::initialize(
         deform_y,
         deform_z,
         deform_rate));
+      break;
+    case 19: // mttk msst
+      // I creat the object elsewhere.
       break;
     case 20: // NPT-NH
       // I creat the object elsewhere.
@@ -350,6 +354,9 @@ void Integrate::parse_ensemble(
     strcmp(param[1], "nph_mttk") == 0) {
     type = 20;
     ensemble.reset(new Ensemble_MTTK(param, num_param));
+  } else if (strcmp(param[1], "msst_mttk") == 0) {
+    type = 19;
+    ensemble.reset(new Ensemble_MSST_MTTK(param, num_param));
   } else if (strcmp(param[1], "heat_nhc") == 0) {
     type = 21;
     if (num_param != 7) {
@@ -385,7 +392,7 @@ void Integrate::parse_ensemble(
   }
 
   // 2. Temperatures and temperature_coupling (NVT and NPT)
-  if (type >= 1 && type < 20) {
+  if (type >= 1 && type < 19) {
     // initial temperature
     if (!is_valid_real(param[2], &temperature1)) {
       PRINT_INPUT_ERROR("Initial temperature should be a number.");
@@ -421,7 +428,7 @@ void Integrate::parse_ensemble(
   }
 
   // 3. Pressures and pressure_coupling (NPT)
-  if (type >= 11 && type < 20) {
+  if (type >= 11 && type < 19) {
     // pressures:
     if (num_param == 12) {
       for (int i = 0; i < 3; i++) {
@@ -801,6 +808,8 @@ void Integrate::parse_ensemble(
       }
       break;
     case 20:
+      break;
+    case 19:
       break;
     case 21:
       printf("Integrate with heating and cooling for this run.\n");
