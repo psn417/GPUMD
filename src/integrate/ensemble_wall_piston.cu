@@ -68,8 +68,8 @@ static __global__ void gpu_velocity_verlet(
       vy = 0;
       vz = 0;
     } else if (left_wall_list[i]) {
-      vx = vp;
-      vy = 0;
+      vx = 0;
+      vy = vp;
       vz = 0;
     } else {
       vx += ax * time_step_half;
